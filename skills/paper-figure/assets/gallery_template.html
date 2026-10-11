@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>figures</title>
+<link href="https://fonts.googleapis.com/css2?family=STIX+Two+Text:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: light; padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; background: #fff; color: #000; font: 9pt/1.35 "STIX Two Text", "Times New Roman", Times, serif; }
+  main { width: calc(var(--page) + 32px); max-width: 100%; margin: 0 auto; padding: 0.5in 16px; box-sizing: border-box; }
+  h1 { font-size: 14pt; font-weight: normal; margin: 0; }
+  .meta { color: #666; margin: 2px 0 0.3in; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; column-gap: 0.25in; row-gap: 0.35in; grid-auto-flow: dense; }
+  figure { margin: 0; }
+  figure.wide { grid-column: span 2; }
+  img { display: block; max-width: 100%; height: auto; margin: 0 auto; }
+  figcaption { margin-top: 6px; text-align: justify; }
+  .dl { margin-top: 4px; }
+  button { font: 8pt system-ui, sans-serif; padding: 2px 8px; margin-right: 4px; background: #fff; border: 1px solid #bbb; border-radius: 4px; cursor: pointer; }
+  button:disabled { opacity: .4; cursor: default; }
+  @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } figure.wide { grid-column: auto; } }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title"></h1>
+  <p class="meta" id="meta"></p>
+  <div class="grid" id="grid"></div>
+</main>
+<script id="gallery-data" type="application/json">{"project": "project-name", "figures": []}</script>
+<script>
+const data = JSON.parse(document.getElementById("gallery-data").textContent);
+document.title = document.getElementById("title").textContent = data.project + "-figures";
+const n = data.figures.length;
+document.getElementById("meta").textContent = `${n} figure${n === 1 ? "" : "s"} · updated ${localTime(data.updated)}`;
+
+// UTC timestamp -> viewer's local "YYYY-MM-DD HH:MM"
+function localTime(iso) {
+  const d = new Date(iso);
+  if (!iso || isNaN(d)) return iso || "–";
+  const p = x => String(x).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+const grid = document.getElementById("grid");
+// page = widest figure (at least ICML's 6.75 in); two columns with a 0.25 in gap, like the paper
+const page = Math.max(6.75, ...data.figures.map(f => f.width_in));
+document.documentElement.style.setProperty("--page", page + "in");
+const buttons = [];
+
+data.figures.forEach((f, i) => {
+  const fig = document.createElement("figure");
+  if (f.width_in > (page - 0.25) / 2) fig.className = "wide";   // wider than one column -> span both, like figure*
+  fig.innerHTML = `<img alt=""><figcaption><b>Figure ${i + 1}: ${esc(f.caption_lead)}</b> ${esc(f.caption_body || "")}</figcaption>
+    <div class="dl"><button disabled>PDF</button><button disabled>PNG</button></div>`;
+  const img = fig.querySelector("img");
+  img.src = "data:image/png;base64," + f.png_b64;
+  img.style.width = f.width_in + "in";           // actual printed size
+  const [pdf, png] = fig.querySelectorAll("button");
+  pdf.onclick = () => save(f.id + ".pdf", f.pdf_b64);
+  png.onclick = () => save(f.id + ".png", f.png_b64);
+  buttons.push(pdf, png);
+  grid.appendChild(fig);
+});
+
+function esc(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
+
+let downloads = null;
+function save(filename, b64) {
+  const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  downloads.save({ filename, data: new Blob([bytes]) }).catch(() => {});
+}
+(window.claude ? window.claude.use("downloads") : Promise.resolve(null)).then(ns => {
+  downloads = ns;
+  if (ns) buttons.forEach(b => (b.disabled = false));
+});
+</script>
+</body>
+</html>
