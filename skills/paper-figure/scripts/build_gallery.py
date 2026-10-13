@@ -22,44 +22,20 @@ Manifest (JSON):
 With --merge, figures already in the previously published page are kept; a figure with the same
 id is replaced by the new one, and new ids are appended in manifest order.
 
-The preview is shown at the figure's physical width (PNG pixel width / PNG dpi, read from the
-pHYs chunk; 300 dpi assumed if missing).
+The page previews the PDF at its printed size; PDF and PNG are offered as downloads.
 """
 import argparse
 import base64
-import datetime as _dt
 import html
 import json
 import os
 import re
-import struct
 import sys
 
 DATA_RE = re.compile(
     r'<script id="gallery-data" type="application/json">(.*?)</script>', re.S
 )
 SIZE_LIMIT = 16 * 1024 * 1024
-
-def png_width_in(path: str) -> float:
-    """Physical width in inches from the PNG header and pHYs chunk (300 dpi if absent)."""
-    with open(path, "rb") as f:
-        buf = f.read()
-    if buf[:8] != b"\x89PNG\r\n\x1a\n":
-        sys.exit(f"not a PNG: {path}")
-    width_px = struct.unpack(">I", buf[16:20])[0]
-    dpi, pos = 300.0, 8
-    while pos + 8 <= len(buf):
-        length, ctype = struct.unpack(">I4s", buf[pos:pos + 8])
-        if ctype == b"pHYs":
-            ppu_x, _, unit = struct.unpack(">IIB", buf[pos + 8:pos + 17])
-            if unit == 1 and ppu_x:
-                dpi = ppu_x * 0.0254
-            break
-        if ctype == b"IDAT":
-            break
-        pos += 12 + length
-    return round(width_px / dpi, 3)
-
 
 def b64(path: str) -> str:
     with open(path, "rb") as f:
@@ -96,7 +72,6 @@ def main():
             "id": fig["id"],
             "caption_lead": fig["caption_lead"].strip(),
             "caption_body": fig.get("caption_body", "").strip(),
-            "width_in": png_width_in(fig["png"]),
             "pdf_b64": b64(fig["pdf"]),
             "png_b64": b64(fig["png"]),
         })
@@ -110,11 +85,7 @@ def main():
             index[fig["id"]] = len(figures)
             figures.append(fig)
 
-    data = {
-        "project": project,
-        "updated": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),  # UTC; page shows viewer's local time
-        "figures": figures,
-    }
+    data = {"project": project, "figures": figures}
     blob = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     with open(os.path.join(os.path.dirname(__file__), "..", "assets", "gallery_template.html"),
               encoding="utf-8") as f:

@@ -1,6 +1,6 @@
 ---
 name: paper-figure
-description: Style rules for academic paper figures made with matplotlib or seaborn (size, fonts, colors, axes, legends, saving), plus a required delivery step - every figure gets a paper-style caption and is published to a `{project-name}-figures` artifact gallery where it can be previewed and downloaded (PDF/PNG) with a copy-caption button. Always use this skill when creating or editing any figure, plot, graph, chart, heatmap, or visualization intended for a paper, even if no venue (ICML, CVPR, ACL, NeurIPS, ICLR) is mentioned, and even if the user asks only for the plotting code.
+description: Style rules for academic paper figures made with matplotlib or seaborn (size, fonts, colors, axes, legends, saving), plus a required delivery step - every figure gets a paper-style caption and is published to a `{project-name}-figures` artifact gallery where it can be previewed and downloaded (PDF/PNG). Always use this skill when creating or editing any figure, plot, graph, chart, heatmap, or visualization intended for a paper, even if no venue (ICML, CVPR, ACL, NeurIPS, ICLR) is mentioned, and even if the user asks only for the plotting code.
 ---
 
 # Paper Figure Rules
@@ -21,82 +21,64 @@ Apply every rule unless the user says otherwise. Order: size → style → plot 
 
 - No venue: ICML single column. Venue without column type: single column (NeurIPS/ICLR: 5.5 in).
 
-### Grid
+### Grid and panel aspect
 
-- One row if every panel is ≥ 1 in wide; otherwise add rows, spread evenly (4 → 2×2). Turn off unused cells.
+Choose the grid (rows × cols) and the panel aspect together, by judgment, for what this data needs to show. The aspect (width : height) is per panel, not for the whole figure, and is one of three:
 
-### Height (inches; compute, don't guess)
+| Aspect | `aspect=` | Typical fit |
+|---|---|---|
+| 1 : 0.618 | 0.618 | curves, bars, histograms |
+| 1 : 1 | 1.0 | heatmap, confusion matrix, embedding |
+| 0.618 : 1 | 1.618 | content that is taller than wide (e.g. many horizontal bars) |
 
-| Step | Formula |
-|---|---|
-| Usable width | figure width − 0.8 if a colorbar is attached |
-| Panel width | (usable width − 0.35 − 0.25 × (ncols − 1)) / ncols |
-| Panel height | panel width × 0.618 (1.0 for heatmap, confusion matrix, embedding) |
-| Figure height | nrows × (panel height + 0.35 + 0.25 if titled) + 0.05 + 0.2 × outside legend rows |
+- Ask what the reader must see: slopes and gaps between curves need height, many x categories need width, matrices need square cells.
+- Compare a few layouts before choosing. E.g. two line plots in one column: side by side gives ~1.3 in-wide panels that flatten the curves; stacked 2×1 at 0.618 gives each panel the full width and enough height, so it is better.
+- Spread panels evenly; turn off unused cells.
+- Turn on `sharex` / `sharey` when panels plot the same quantity on that axis (`plt.subplots(..., sharex=True, sharey=True)`); inner tick labels hide automatically, and axis labels go on the outer panels only.
+- After rendering, if curves look flattened or labels crowd, change the grid or aspect and re-render.
 
-### Layout
+### Height
 
-| Setting | Value |
-|---|---|
-| `layout` | `"constrained"`, `w_pad = h_pad = 0.01` |
-| `wspace` | 0.25 × (ncols − 1) / figure width |
-| `hspace` | 0.25 × (nrows − 1) / figure height |
-| `bbox_inches` | never set |
+Don't compute it. Create the figure at the target width with any height, draw everything (labels, legend, colorbar), then call `fit_height` last. It changes only the height so every panel matches the chosen aspect.
+
+```python
+fig, axes = plt.subplots(1, 2, figsize=(3.25, 2))  # after the §2 setup
+...  # plot, labels, fig.legend, colorbar
+fit_height(fig, axes, aspect=0.618)
+fig.savefig(...)  # never bbox_inches="tight"
+```
+
+- `ax` may be one Axes, an array, a list, or the `subplot_mosaic` dict; hidden cells and colorbars are skipped.
+- `ValueError` (fixed aspect): use `imshow(..., aspect="auto")` instead of `set_aspect`.
+- "different widths" warning: give all panels the same width (no spanning cells or `width_ratios`), or accept and tell the user.
 
 ## 2. Base style
 
-### Fonts
+Always start with the bundled style; don't set or override its rcParams by hand:
 
-| Setting | Value |
-|---|---|
-| `font.family` | serif |
-| `font.serif` | Times New Roman, TeX Gyre Termes, Nimbus Roman, STIX Two Text, DejaVu Serif (tell the user if DejaVu is used) |
-| `mathtext.fontset` | stix |
+```python
+import sys; sys.path.insert(0, "/mnt/skills/plugins/paper-figure/scripts")
+from paper import fit_height  # importing paper also registers the bundled Inter font
+plt.style.use("/mnt/skills/plugins/paper-figure/assets/paper.mplstyle")
+```
 
-### Font sizes (pt)
+It sets fonts (Inter for all text and math, 9 / 8 / 11 pt), left+bottom spines, 0.5 pt axes and ticks, horizontal #DDDDDD gridlines, lines and markers, the §4 color cycle, legend frame defaults, constrained layout, 300 dpi, and fonttype 42 (PDF text stays text with Inter embedded, so it renders the same anywhere).
 
-| Element | rcParam | Size |
-|---|---|---|
-| Base / annotations | `font.size` | 9 |
-| Axis labels | `axes.labelsize` | 9 |
-| Tick labels | `xtick.labelsize`, `ytick.labelsize` | 8 |
-| Legend | `legend.fontsize` | 8 |
-| Panel title | `axes.titlesize` | 12 (`titleweight` normal, `titlepad` 3) |
-
+- If text renders in DejaVu Sans, `paper` was not imported before plotting; fix that.
 - No figure title. Panel identifiers (dataset, setting) go in the axes title, never as text inside the axes.
-
-### Axes
-
-| Setting | Value |
-|---|---|
-| Spines | left and bottom only |
-| `axes.linewidth` | 0.5 |
-| Tick width (x, y, major, minor) | 0.5 |
-| `axes.grid` / `axes.grid.axis` | True / y |
-| `axes.axisbelow` | True |
-| `grid.color` / `grid.linewidth` | #DDDDDD / 0.5 |
-
-### Lines and markers
-
-| Setting | Value |
-|---|---|
-| `lines.linewidth` | 1.0 |
-| `lines.markersize` | 4 |
-| `lines.markeredgecolor` | #FFFFFF |
-| `lines.markeredgewidth` | 0.5 |
-| Subsampled markers | at x major tick positions (mask by x value, not index step) |
-| Reference lines (max/min, regression, threshold) | color of related data, `--`, `alpha` 0.5, behind data |
+- Subsampled markers: at x major tick positions (mask by x value, not index step).
+- Reference lines (max/min, regression, threshold): color of related data, `--`, `alpha` 0.5, behind data.
 
 ## 3. Plot-type overrides
 
 | Plot type | Frame | Gridlines | Other |
 |---|---|---|---|
 | Line | Base | Horizontal | – |
-| Vertical bar, histogram | Base | Horizontal | Bar edge black 0.5; `hatch.linewidth` 0.5 |
-| Horizontal bar | Base | Vertical | Bar edge black 0.5 |
+| Vertical bar, histogram | Base | Horizontal | `edgecolor="black"` |
+| Horizontal bar | Base | Vertical | `edgecolor="black"` |
 | Scatter | Full | Horizontal | `edgecolors="none"`, `alpha` 0.5 |
 | Embedding (t-SNE, UMAP) | Full | None | No ticks; markers as scatter |
-| Heatmap, confusion matrix | Full | None | No tick marks; colorbar outline 0.5; cell text white if \|v\| > 0.6 × max, else black |
+| Heatmap, confusion matrix | Full | None | No tick marks; cell text by cell luminance: `"white" if np.dot(im.cmap(im.norm(v))[:3], [0.299, 0.587, 0.114]) < 0.5 else "black"` |
 
 ## 4. Color
 
@@ -114,12 +96,6 @@ Apply every rule unless the user says otherwise. Order: size → style → plot 
 | O8 | gray | #999999 |
 | O9 | black | #000000 |
 
-```python
-plt.rcParams["axes.prop_cycle"] = plt.cycler(color=[
-    "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2",
-    "#D55E00", "#CC79A7", "#999999", "#000000"])
-```
-
 ### Rules
 
 | Case | Color |
@@ -132,6 +108,7 @@ plt.rcParams["axes.prop_cycle"] = plt.cycler(color=[
 | Signed | O5 → white → O6, centered at 0 (symmetric `vmin/vmax` or `TwoSlopeNorm`) |
 
 - If series could be confused (grayscale, many series, shades), also vary marker or line style.
+- Never use fill patterns (hatching, dots, `hatch=`) to tell series apart; use color only.
 
 ## 5. Legend
 
@@ -141,31 +118,26 @@ plt.rcParams["axes.prop_cycle"] = plt.cycler(color=[
 | Multiple panels | one shared `fig.legend`, `loc="outside lower center"`, `ncol` = entries; no per-panel legends |
 | Grouped series | rows = groups, columns = variants |
 
-| Setting | All | Inside | Outside |
-|---|---|---|---|
-| `handlelength` / `handletextpad` | 1.5 / 0.25 | | |
-| `columnspacing` / `labelspacing` | 1.0 / 0.25 | | |
-| Frame | | square (`fancybox` False), edge #DDDDDD, width 0.5, fill white, `framealpha` 1 | none |
-| `borderpad` | | 0.5 | 0.5 |
-| `borderaxespad` | | 0.75 | 0 |
+- Inside legends use the style defaults (8 pt). Outside legends add `frameon=False, borderaxespad=0, fontsize=9`.
 
 ## 6. Save
 
 | Item | Rule |
 |---|---|
-| Files | `{id}.pdf` + `{id}.png` (300 dpi), id in kebab-case |
+| Files | `{id}.pdf` + `{id}.png`, id in kebab-case |
+| PDF fonts | Embedded TrueType only (Type 1 is also accepted); never Type 3 or unembedded fonts, which venues reject. The style's `pdf.fonttype: 42` guarantees this: never override it, and never turn text into paths or images. |
 | Folder | `/mnt/user-data/outputs/{project-name}-figures/` |
-| Font embedding | `pdf.fonttype` 42, `ps.fonttype` 42, `svg.fonttype` none |
 | LaTeX (one line in reply) | single column → `figure`, `width=\columnwidth`; double → `figure*`, `width=\textwidth` |
 
 ## 7. Check
 
 Look at the PNG; fix and re-render if any fails:
 
-- Width equals target.
+- Width equals target; `fit_height` raised no warning.
+- PDF fonts are embedded TrueType: `pdffonts {id}.pdf` lists every font as `CID TrueType` with emb `yes` (without pdffonts: `grep -ac /Type3 {id}.pdf` prints 0).
 - No clipped or overlapping text; legend covers no data or labels.
 - Panel spacing visible; subsampled markers on ticks.
-- Font is Times-family, not DejaVu.
+- Font is Inter, not DejaVu.
 - Colors follow §4.
 - Caption matches the figure.
 
@@ -189,7 +161,7 @@ Written as it appears under the figure in the paper; must stand alone. Paper's l
 
 Always publish all project figures to one artifact, `{project-name}-figures`, even for a single figure or a script-only request. If the Artifact tool is unavailable, `present_files` the PDF/PNG and put the caption in the reply.
 
-The page comes from `assets/gallery_template.html` via the script below (paper-style 2-column layout, actual size, caption, PDF/PNG buttons). Don't hand-write or restyle it.
+The page comes from `assets/gallery_template.html` via the script below (figure list on the left; the selected figure's PDF at actual size, its caption, and PDF/PNG downloads on the right). Don't hand-write or restyle it.
 
 1. **Name**: user's project name → repo/folder name → topic slug; lowercase kebab-case.
 2. **Existing gallery**: reuse its url if published in this conversation; otherwise `Artifact` `list`, find the exact title, `read` it, and pass its `index.html` as `--merge`.
@@ -206,5 +178,5 @@ The page comes from `assets/gallery_template.html` via the script below (paper-s
    python /mnt/skills/plugins/paper-figure/scripts/build_gallery.py --manifest <figures.json> \
      --out /mnt/user-data/outputs/{project-name}-figures.html [--merge <index.html>]
    ```
-5. **Publish**: `Artifact` with `file_path`, `title` = `{project-name}-figures`, `favicon` 📊, `capabilities` `{"downloads": true}`, `url` if existing.
-6. **Reply**: changes, LaTeX line, any `[TODO]`, DejaVu fallback. No `present_files` for the HTML.
+5. **Publish**: `Artifact` with `file_path`, `title` = `{project-name}-figures`, `icon` `"chart"`, `capabilities` `{"downloads": true}`, `url` if existing.
+6. **Reply**: changes, LaTeX line, any `[TODO]`. No `present_files` for the HTML.

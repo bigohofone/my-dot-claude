@@ -1,0 +1,56 @@
+font.family: sans-serif
+font.sans-serif: Inter
+mathtext.fontset: custom
+
+font.size: 9
+axes.labelsize: 9
+xtick.labelsize: 8
+ytick.labelsize: 8
+legend.fontsize: 8
+axes.titlesize: 11
+axes.titleweight: normal
+axes.titlepad: 3
+
+axes.spines.top: False
+axes.spines.right: False
+axes.linewidth: 0.5
+xtick.major.width: 0.5
+xtick.minor.width: 0.5
+ytick.major.width: 0.5
+ytick.minor.width: 0.5
+axes.grid: True
+axes.grid.axis: y
+axes.axisbelow: True
+grid.color: DDDDDD
+grid.linewidth: 0.5
+
+lines.linewidth: 1.0
+lines.markersize: 4
+lines.markeredgecolor: FFFFFF
+lines.markeredgewidth: 0.5
+# also sets the legend frame width (no legend.linewidth rcParam)
+patch.linewidth: 0.5
+
+axes.prop_cycle: cycler('color', ['E69F00', '56B4E9', '009E73', 'F0E442', '0072B2', 'D55E00', 'CC79A7', '999999', '000000'])
+image.cmap: viridis
+
+legend.handlelength: 1.5
+legend.handletextpad: 0.5
+legend.columnspacing: 1.0
+legend.labelspacing: 0.25
+legend.fancybox: False
+legend.edgecolor: DDDDDD
+legend.facecolor: FFFFFF
+legend.framealpha: 1
+legend.borderpad: 0.5
+legend.borderaxespad: 0.5
+
+figure.constrained_layout.use: True
+figure.constrained_layout.w_pad: 0.02
+figure.constrained_layout.h_pad: 0.02
+# gap between stacked rows, as a fraction of panel height
+figure.constrained_layout.hspace: 0.04
+
+savefig.dpi: 300
+# embedded TrueType (never Type 3, which venues reject); PDF text stays selectable text
+pdf.fonttype: 42
