@@ -11,15 +11,16 @@ Apply every rule unless the user says otherwise. Order: size → style → plot 
 
 ### Width
 
-| Venue | Single column | Double column |
-|---|---|---|
-| ICML | 3.25 in | 6.75 in |
-| CVPR | 3.25 in | 6.875 in |
-| ACL (ARR) | 3 in | 6.25 in |
-| NeurIPS | – | 5.5 in |
-| ICLR | – | 5.5 in |
+| Venue | Single column | 1.5 column | Double column |
+|---|---|---|---|
+| ICML | 3.25 in | 5.0625 in | 6.75 in |
+| CVPR | 3.25 in | 5.15625 in | 6.875 in |
+| ACL (ARR) | 3 in | 4.6875 in | 6.25 in |
+| NeurIPS | – | – | 5.5 in |
+| ICLR | – | – | 5.5 in |
 
 - No venue: ICML single column. Venue without column type: single column (NeurIPS/ICLR: 5.5 in).
+- 1.5 column is 0.75 × double column: a `figure*` that does not need the full text width. Use it only when the user asks or when single column is too narrow and double column leaves the content sparse.
 
 ### Grid and panel aspect
 
@@ -28,10 +29,11 @@ Choose the grid (rows × cols) and the panel aspect together, by judgment, for w
 | Aspect | `aspect=` | Typical fit |
 |---|---|---|
 | 2.618 : 1 | 0.382 | a single panel at double-column width (curves, bars) |
-| 1 : 0.618 | 0.618 | curves, bars, histograms |
-| 1 : 1 | 1.0 | heatmap, confusion matrix, embedding |
+| 1 : 0.618 | 0.618 | curves, bars, histograms in a panel ≥ 3 in wide |
+| 1 : 1 | 1.0 | curves, bars in a panel < 3 in wide (3+ columns at double width, 2 columns at single width); heatmap, confusion matrix, embedding |
 | 0.618 : 1 | 1.618 | content that is taller than wide (e.g. many horizontal bars) |
 
+- Panel width decides between 0.618 and 1.0: tick labels, titles and axis labels take about the same height at any panel size, so a panel narrower than 3 in at 0.618 leaves too little height for the data.
 - Ask what the reader must see: slopes and gaps between curves need height, many x categories need width, matrices need square cells.
 - Compare a few layouts before choosing. E.g. two line plots in one column: side by side gives ~1.3 in-wide panels that flatten the curves; stacked 2×1 at 0.618 gives each panel the full width and enough height, so it is better.
 - Spread panels evenly; turn off unused cells.
@@ -58,15 +60,19 @@ fig.savefig(...)  # never bbox_inches="tight"
 Always start with the bundled style, copied into the project's `figures/` (§9); don't set or override its rcParams by hand. In the notebook, which runs from `figures/`:
 
 ```python
+import tol_colors as tc
 from paper import fit_height  # importing paper also registers the bundled Inter font
 plt.style.use("paper.mplstyle")
 ```
 
-It sets fonts (Inter for all text and math: labels 9, ticks 8, legend 7, titles 11 pt), left+bottom spines, 0.5 pt axes and ticks, horizontal #DDDDDD gridlines, lines and markers, the §4 color cycle, legend frame defaults, constrained layout, 300 dpi, and fonttype 42 (PDF text stays text with Inter embedded, so it renders the same anywhere).
+It needs `tol-colors` (Paul Tol's own palette package; Python 3.10+) in the project's Python; if it is missing, tell the user and ask before installing it.
+
+It sets fonts (Inter for all text and math, STIX Sans for math symbols Inter lacks: labels 9, ticks 8, legend 7, titles 11 pt bold), left+bottom spines, 0.5 pt axes and ticks, horizontal #DDDDDD gridlines, lines and markers, the `bright` color cycle and `tol.iridescent` colormap (§4), legend frame defaults, constrained layout, 300 dpi, and fonttype 42 (PDF text stays text with Inter embedded, so it renders the same anywhere).
 
 - If text renders in DejaVu Sans, `paper` was not imported before plotting; fix that.
 - No figure title. Panel identifiers (dataset, setting) go in the axes title, never as text inside the axes.
 - Subsampled markers: at x major tick positions (mask by x value, not index step).
+- Don't set axis limits exactly at the first or last data point (e.g. `set_xlim(0, 1)` for x in [0, 1]); markers there get cut in half. Keep the default margin.
 - Reference lines (max/min, regression, threshold): color of related data, `--`, `alpha` 0.5, behind data.
 - Value labels (numbers on bars or points, e.g. `bar_label`): `fontsize=5`; the proposed method's ("Ours") labels bold.
 
@@ -75,49 +81,54 @@ It sets fonts (Inter for all text and math: labels 9, ticks 8, legend 7, titles 
 | Plot type | Frame | Gridlines | Other |
 |---|---|---|---|
 | Line | Base | Horizontal | – |
-| Vertical bar, histogram | Base | Horizontal | `edgecolor="black"` |
-| Horizontal bar | Base | Vertical | `edgecolor="black"` |
+| Vertical bar, histogram | Base | Horizontal | `linewidth=0` (no outline) |
+| Horizontal bar | Base | Vertical | `linewidth=0` (no outline) |
 | Scatter | Full | Horizontal | `edgecolors="none"`, `alpha` 0.5 |
 | Embedding (t-SNE, UMAP) | Full | None | No ticks; markers as scatter |
 | Heatmap, confusion matrix | Full | None | No tick marks; cell text by cell luminance: `"white" if np.dot(im.cmap(im.norm(v))[:3], [0.299, 0.587, 0.114]) < 0.5 else "black"` |
 
 ## 4. Color
 
-### Okabe-Ito cycle (this order)
+Paul Tol's color-blind-safe schemes, from `tol_colors` (imported as `tc`). Pick colors by name from a set (`cset = tc.colorsets["bright"]`, then `cset.red`) and colormaps by `cmap="tol.<name>"`.
 
-| # | Name | Hex |
+### Qualitative sets
+
+| Set | Colors (in order) | Use |
 |---|---|---|
-| O1 | orange | #E69F00 |
-| O2 | sky blue | #56B4E9 |
-| O3 | bluish green | #009E73 |
-| O4 | yellow | #F0E442 |
-| O5 | blue | #0072B2 |
-| O6 | vermillion | #D55E00 |
-| O7 | reddish purple | #CC79A7 |
-| O8 | gray | #999999 |
-| O9 | black | #000000 |
+| `bright` | blue, red, green, yellow, cyan, purple, grey | Default |
+| `vibrant` | orange, blue, cyan, magenta, red, teal, grey | Same use as bright, more saturated; user's choice |
+| `muted` | rose, indigo, sand, green, cyan, wine, teal, olive, purple, pale_grey | 7–9 series |
+| `high_contrast` | blue, yellow, red (+ black, white) | ≤ 3 series that must survive grayscale printing |
+| `medium_contrast` | light/dark blue, yellow, red (+ black, white) | Paired series, e.g. train/test per method |
+| `light` | light_blue, orange, light_yellow, pink, light_cyan, mint, pear, olive, pale_grey | Filled areas with text on top |
+| `pale`, `dark` | pale_* / dark_* blue, red, green, yellow, cyan, grey | Backgrounds / text only |
+
+- Use `bright` unless the user names another set or the case above fits better. One set per figure; the same set across a paper.
 
 ### Rules
 
 | Case | Color |
 |---|---|
-| Categorical | O1 → O9 in order; never reorder or skip |
-| "Ours" | O6; others take the rest in order |
-| Neutral / de-emphasized | O8; drop O8 from the cycle for the rest |
-| Grouped (sizes, sweeps) | one cycle color per group; within group blend with white at 40 / 70 / 100 %, light → dark |
-| Sequential | `viridis` |
-| Signed | O5 → white → O6, centered at 0 (symmetric `vmin/vmax` or `TwoSlopeNorm`) |
+| Categorical | the set's colors in order, skipping grey, black and white; never reorder |
+| "Ours" | the set's red (`muted`: rose); others take the rest in order |
+| Neutral / de-emphasized | the set's grey (`pale_grey`; `high_contrast`: `tc.colorsets["bright"].grey`) |
+| Grouped (sizes, sweeps) | one set color per group; within group blend with white at 40 / 70 / 100 %, light → dark |
+| Sequential | `tol.iridescent` (style default); also `tol.YlOrBr`, `tol.WhOrBr`, `tol.incandescent` |
+| Signed | `tol.sunset`, centered at 0 (symmetric `vmin/vmax` or `TwoSlopeNorm`); also `tol.BuRd`, `tol.PRGn`, `tol.nightfall` |
+
+- Few levels (e.g. a 5-step heatmap): the `_discrete` version of the map (`tol.sunset_discrete`).
 
 - If series could be confused (grayscale, many series, shades), also vary marker or line style.
 - Never use fill patterns (hatching, dots, `hatch=`) to tell series apart; use color only.
-- Exception, emphasis: in filled marks (bars, histograms, areas), hatch the proposed method ("Ours") and anything the user wants highlighted with `hatch="//////"`, on top of its color. Hatch nothing else.
+- Exception, emphasis: in filled marks (bars, histograms, areas), hatch the proposed method ("Ours") and anything the user wants highlighted with `hatch="//////"`, on top of its color. Hatch nothing else. Every hatch pattern is its symbol repeated 6 times (`"//////"`, `"xxxxxx"`, `"......"`), drawn at the style's 1 pt hatch width. The hatch is a darker shade of the bar color, not black: the hatch takes the edge color, so pass `edgecolor=0.6 * np.array(to_rgb(color))` (from `matplotlib.colors`) with `linewidth=0`, which keeps the outline off.
 
 ## 5. Legend
 
 | Case | Rule |
 |---|---|
 | Single panel | inside, explicit `loc` (never `"best"`) |
-| Multiple panels | one shared `fig.legend`, `loc="outside lower center"`, `ncol` = entries; no per-panel legends |
+| Multiple panels, same series | one shared `fig.legend`, `loc="outside lower center"`, `ncol` = entries; no per-panel legends |
+| Multiple panels, different series per panel | one legend per panel, below its x-axis label: `ax.legend(loc="upper center", bbox_to_anchor=(0.5, 0), borderaxespad=4, frameon=False, fontsize=8)`; never merge them into one legend |
 | Grouped series | rows = groups, columns = variants |
 
 - Inside legends use the style defaults (7 pt). Outside legends add `frameon=False, borderaxespad=0, fontsize=8`.
@@ -129,7 +140,7 @@ It sets fonts (Inter for all text and math: labels 9, ticks 8, legend 7, titles 
 | Files | `{id}.pdf` + `{id}.png`, id in kebab-case |
 | PDF fonts | Embedded TrueType only (Type 1 is also accepted); never Type 3 or unembedded fonts, which venues reject. The style's `pdf.fonttype: 42` guarantees this: never override it, and never turn text into paths or images. |
 | Folder | the project's `figures/` (§9); save with relative paths `"{id}.pdf"` |
-| LaTeX (one line in reply) | single column → `figure`, `width=\columnwidth`; double → `figure*`, `width=\textwidth` |
+| LaTeX (one line in reply) | single column → `figure`, `width=\columnwidth`; 1.5 column → `figure*`, `width=0.75\textwidth`; double → `figure*`, `width=\textwidth` |
 
 ## 7. Check
 
@@ -175,7 +186,7 @@ figures/
 
 | Cell | Content |
 |---|---|
-| First (code, once) | Setup: `%matplotlib inline`, `%config InlineBackend.print_figure_kwargs = {"bbox_inches": None}` (inline preview at the saved size, not cropped), imports, the §2 setup |
+| First (code, once) | Setup: `%matplotlib inline`, `%config InlineBackend.print_figure_kwargs = {"bbox_inches": None}` (inline preview at the saved size, not cropped), `%config InlineBackend.figure_formats = ["retina"]` (sharp preview; the inline default is 100 dpi), imports, the §2 setup |
 | Per figure (markdown) | `## {id}` then the §8 caption |
 | Per figure (code) | Everything for that figure: load data, plot, `fit_height`, save `{id}.pdf` + `{id}.png`, `plt.show()` |
 

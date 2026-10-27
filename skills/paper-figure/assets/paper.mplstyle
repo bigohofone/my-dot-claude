@@ -1,6 +1,11 @@
 font.family: sans-serif
 font.sans-serif: Inter
 mathtext.fontset: custom
+# symbols Inter lacks (sqrt, sum, relations, \mathbb) use STIX Sans, which ships with matplotlib
+mathtext.fallback: stixsans
+mathtext.cal: STIXNonUnicode:italic
+# no Inter Bold Italic is bundled; without this matplotlib warns on every math label
+mathtext.bfit: sans:bold
 
 font.size: 9
 axes.labelsize: 9
@@ -8,8 +13,9 @@ xtick.labelsize: 8
 ytick.labelsize: 8
 legend.fontsize: 7
 axes.titlesize: 11
-axes.titleweight: normal
+axes.titleweight: bold
 axes.titlepad: 3
+axes.labelpad: 2
 
 axes.spines.top: False
 axes.spines.right: False
@@ -24,16 +30,17 @@ axes.axisbelow: True
 grid.color: DDDDDD
 grid.linewidth: 0.5
 
-lines.linewidth: 1.0
-lines.markersize: 4
+lines.linewidth: 1.5
+lines.markersize: 4.5
 lines.markeredgecolor: FFFFFF
 lines.markeredgewidth: 0.5
 # also sets the legend frame width (no legend.linewidth rcParam)
 patch.linewidth: 0.5
-hatch.linewidth: 0.5
+hatch.linewidth: 1.0
 
-axes.prop_cycle: cycler('color', ['E69F00', '56B4E9', '009E73', 'F0E442', '0072B2', 'D55E00', 'CC79A7', '999999', '000000'])
-image.cmap: viridis
+# Paul Tol's bright set; tol.* colormaps are registered when paper.py imports tol_colors
+axes.prop_cycle: cycler('color', ['4477AA', 'EE6677', '228833', 'CCBB44', '66CCEE', 'AA3377', 'BBBBBB'])
+image.cmap: tol.iridescent
 
 legend.handlelength: 1.5
 legend.handletextpad: 0.5
@@ -43,7 +50,7 @@ legend.fancybox: False
 legend.edgecolor: DDDDDD
 legend.facecolor: FFFFFF
 legend.framealpha: 1
-legend.borderpad: 0.5
+legend.borderpad: 0.3
 legend.borderaxespad: 0.5
 
 figure.constrained_layout.use: True

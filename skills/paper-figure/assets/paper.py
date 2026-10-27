@@ -2,6 +2,7 @@ import warnings
 from pathlib import Path
 
 import numpy as np
+import tol_colors  # registers the tol.* colormaps that paper.mplstyle names
 from matplotlib import font_manager
 from matplotlib.layout_engine import ConstrainedLayoutEngine
 from matplotlib.ticker import FixedLocator
