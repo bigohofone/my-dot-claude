@@ -24,16 +24,15 @@ Apply every rule unless the user says otherwise. Order: size → style → plot 
 
 ### Grid and panel aspect
 
-Choose the grid (rows × cols) and the panel aspect together, by judgment, for what this data needs to show. The aspect (width : height) is per panel, not for the whole figure, and is one of four:
+Choose the grid (rows × cols) and the panel aspect together, by judgment, for what this data needs to show. Use the golden ratio (0.618) unless the content needs another aspect. The aspect (width : height) is per panel, not for the whole figure, and is one of four:
 
 | Aspect | `aspect=` | Typical fit |
 |---|---|---|
 | 2.618 : 1 | 0.382 | a single panel at double-column width (curves, bars) |
-| 1 : 0.618 | 0.618 | curves, bars, histograms in a panel ≥ 3 in wide |
-| 1 : 1 | 1.0 | curves, bars in a panel < 3 in wide (3+ columns at double width, 2 columns at single width); heatmap, confusion matrix, embedding |
+| 1 : 0.618 | 0.618 | curves, bars, histograms (default) |
+| 1 : 1 | 1.0 | heatmap, confusion matrix, embedding |
 | 0.618 : 1 | 1.618 | content that is taller than wide (e.g. many horizontal bars) |
 
-- Panel width decides between 0.618 and 1.0: tick labels, titles and axis labels take about the same height at any panel size, so a panel narrower than 3 in at 0.618 leaves too little height for the data.
 - Ask what the reader must see: slopes and gaps between curves need height, many x categories need width, matrices need square cells.
 - Compare a few layouts before choosing. E.g. two line plots in one column: side by side gives ~1.3 in-wide panels that flatten the curves; stacked 2×1 at 0.618 gives each panel the full width and enough height, so it is better.
 - Spread panels evenly; turn off unused cells.
