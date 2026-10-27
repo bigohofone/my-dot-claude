@@ -1,11 +1,11 @@
 ---
 name: paper-figure
-description: Style rules for academic paper figures made with matplotlib or seaborn (size, fonts, colors, axes, legends, saving), plus a required delivery step - every figure gets a paper-style caption and is published to a `{project-name}-figures` artifact gallery where it can be previewed and downloaded (PDF/PNG). Always use this skill when creating or editing any figure, plot, graph, chart, heatmap, or visualization intended for a paper, even if no venue (ICML, CVPR, ACL, NeurIPS, ICLR) is mentioned, and even if the user asks only for the plotting code.
+description: Style rules for academic paper figures made with matplotlib or seaborn (size, fonts, colors, axes, legends, saving), plus a required delivery step - a `figures/` folder in the user's project holds a copy of the style files and `figures.ipynb`, where every figure is one self-contained cell, with a paper-style caption above it, so the user can run, edit, and re-export it (PDF/PNG) themselves. Always use this skill when creating or editing any figure, plot, graph, chart, heatmap, or visualization intended for a paper, even if no venue (ICML, CVPR, ACL, NeurIPS, ICLR) is mentioned, and even if the user asks only for the plotting code.
 ---
 
 # Paper Figure Rules
 
-Apply every rule unless the user says otherwise. Order: size → style → plot type → color → legend → save → check → caption → gallery. A figure is not delivered until it is in the gallery with its caption.
+Apply every rule unless the user says otherwise. Order: size → style → plot type → color → legend → save → caption → notebook → check. A figure is not delivered until its cell is in the notebook with its caption and has run.
 
 ## 1. Size
 
@@ -23,10 +23,11 @@ Apply every rule unless the user says otherwise. Order: size → style → plot 
 
 ### Grid and panel aspect
 
-Choose the grid (rows × cols) and the panel aspect together, by judgment, for what this data needs to show. The aspect (width : height) is per panel, not for the whole figure, and is one of three:
+Choose the grid (rows × cols) and the panel aspect together, by judgment, for what this data needs to show. The aspect (width : height) is per panel, not for the whole figure, and is one of four:
 
 | Aspect | `aspect=` | Typical fit |
 |---|---|---|
+| 2.618 : 1 | 0.382 | a single panel at double-column width (curves, bars) |
 | 1 : 0.618 | 0.618 | curves, bars, histograms |
 | 1 : 1 | 1.0 | heatmap, confusion matrix, embedding |
 | 0.618 : 1 | 1.618 | content that is taller than wide (e.g. many horizontal bars) |
@@ -54,20 +55,20 @@ fig.savefig(...)  # never bbox_inches="tight"
 
 ## 2. Base style
 
-Always start with the bundled style; don't set or override its rcParams by hand:
+Always start with the bundled style, copied into the project's `figures/` (§9); don't set or override its rcParams by hand. In the notebook, which runs from `figures/`:
 
 ```python
-import sys; sys.path.insert(0, "/mnt/skills/plugins/paper-figure/scripts")
 from paper import fit_height  # importing paper also registers the bundled Inter font
-plt.style.use("/mnt/skills/plugins/paper-figure/assets/paper.mplstyle")
+plt.style.use("paper.mplstyle")
 ```
 
-It sets fonts (Inter for all text and math, 9 / 8 / 11 pt), left+bottom spines, 0.5 pt axes and ticks, horizontal #DDDDDD gridlines, lines and markers, the §4 color cycle, legend frame defaults, constrained layout, 300 dpi, and fonttype 42 (PDF text stays text with Inter embedded, so it renders the same anywhere).
+It sets fonts (Inter for all text and math: labels 9, ticks 8, legend 7, titles 11 pt), left+bottom spines, 0.5 pt axes and ticks, horizontal #DDDDDD gridlines, lines and markers, the §4 color cycle, legend frame defaults, constrained layout, 300 dpi, and fonttype 42 (PDF text stays text with Inter embedded, so it renders the same anywhere).
 
 - If text renders in DejaVu Sans, `paper` was not imported before plotting; fix that.
 - No figure title. Panel identifiers (dataset, setting) go in the axes title, never as text inside the axes.
 - Subsampled markers: at x major tick positions (mask by x value, not index step).
 - Reference lines (max/min, regression, threshold): color of related data, `--`, `alpha` 0.5, behind data.
+- Value labels (numbers on bars or points, e.g. `bar_label`): `fontsize=5`; the proposed method's ("Ours") labels bold.
 
 ## 3. Plot-type overrides
 
@@ -109,6 +110,7 @@ It sets fonts (Inter for all text and math, 9 / 8 / 11 pt), left+bottom spines, 
 
 - If series could be confused (grayscale, many series, shades), also vary marker or line style.
 - Never use fill patterns (hatching, dots, `hatch=`) to tell series apart; use color only.
+- Exception, emphasis: in filled marks (bars, histograms, areas), hatch the proposed method ("Ours") and anything the user wants highlighted with `hatch="//////"`, on top of its color. Hatch nothing else.
 
 ## 5. Legend
 
@@ -118,7 +120,7 @@ It sets fonts (Inter for all text and math, 9 / 8 / 11 pt), left+bottom spines, 
 | Multiple panels | one shared `fig.legend`, `loc="outside lower center"`, `ncol` = entries; no per-panel legends |
 | Grouped series | rows = groups, columns = variants |
 
-- Inside legends use the style defaults (8 pt). Outside legends add `frameon=False, borderaxespad=0, fontsize=9`.
+- Inside legends use the style defaults (7 pt). Outside legends add `frameon=False, borderaxespad=0, fontsize=8`.
 
 ## 6. Save
 
@@ -126,12 +128,12 @@ It sets fonts (Inter for all text and math, 9 / 8 / 11 pt), left+bottom spines, 
 |---|---|
 | Files | `{id}.pdf` + `{id}.png`, id in kebab-case |
 | PDF fonts | Embedded TrueType only (Type 1 is also accepted); never Type 3 or unembedded fonts, which venues reject. The style's `pdf.fonttype: 42` guarantees this: never override it, and never turn text into paths or images. |
-| Folder | `/mnt/user-data/outputs/{project-name}-figures/` |
+| Folder | the project's `figures/` (§9); save with relative paths `"{id}.pdf"` |
 | LaTeX (one line in reply) | single column → `figure`, `width=\columnwidth`; double → `figure*`, `width=\textwidth` |
 
 ## 7. Check
 
-Look at the PNG; fix and re-render if any fails:
+After the notebook cell has run (§9), look at the PNG; fix the cell and re-run if any fails:
 
 - Width equals target; `fit_height` raised no warning.
 - PDF fonts are embedded TrueType: `pdffonts {id}.pdf` lists every font as `CID TrueType` with emb `yes` (without pdffonts: `grep -ac /Type3 {id}.pdf` prints 0).
@@ -145,11 +147,11 @@ Look at the PNG; fix and re-render if any fails:
 
 Written as it appears under the figure in the paper; must stand alone. Paper's language (default English).
 
-| Part | Field | Content |
-|---|---|---|
-| Lead (bold) | `caption_lead` | What the figure shows, one short sentence |
-| Reading guide | `caption_body` | Encodings not obvious from axes/legend: error bars/bands (±1 std over N seeds), dashed lines, panels (by title), log scale |
-| Takeaway | `caption_body` | Main observation, with a number computed from the plotted data |
+| Part | Content |
+|---|---|
+| Lead (bold) | What the figure shows, one short sentence |
+| Reading guide | Encodings not obvious from axes/legend: error bars/bands (±1 std over N seeds), dashed lines, panels (by title), log scale |
+| Takeaway | Main observation, with a number computed from the plotted data |
 
 - 2–4 sentences, present tense. No "This figure shows…", no restating legend or axis labels.
 - Unknown details → `[TODO: …]`, report in reply. Never invent.
@@ -157,26 +159,28 @@ Written as it appears under the figure in the paper; must stand alone. Paper's l
 
 > **Figure 1: Test accuracy versus training steps on CIFAR-10.** Shaded bands show ±1 std over 3 seeds; the dashed line marks the best baseline's final accuracy. Ours reaches it after 12k steps, 2.1× faster.
 
-## 9. Gallery (required)
+## 9. Notebook (required)
 
-Always publish all project figures to one artifact, `{project-name}-figures`, even for a single figure or a script-only request. If the Artifact tool is unavailable, `present_files` the PDF/PNG and put the caption in the reply.
+All figure work happens in `figures/` at the root of the project the user is working in (e.g. the paper repo), even for a single figure or a script-only request. The user runs, edits, and re-exports figures from there, so it must work without this skill installed and each cell must be plain, readable code they can change.
 
-The page comes from `assets/gallery_template.html` via the script below (figure list on the left; the selected figure's PDF at actual size, its caption, and PDF/PNG downloads on the right). Don't hand-write or restyle it.
+```
+figures/
+├── paper.py, paper.mplstyle, Inter-*.ttf, Inter-LICENSE.txt   # copied from {skill-dir}/assets/
+├── figures.ipynb
+└── {id}.pdf, {id}.png
+```
 
-1. **Name**: user's project name → repo/folder name → topic slug; lowercase kebab-case.
-2. **Existing gallery**: reuse its url if published in this conversation; otherwise `Artifact` `list`, find the exact title, `read` it, and pass its `index.html` as `--merge`.
-3. **Manifest** `/mnt/user-data/outputs/{project-name}-figures/figures.json` (same `id` replaces):
+- `{skill-dir}` is this skill's base directory. Copy with `cp -n {skill-dir}/assets/{paper.py,paper.mplstyle,Inter-*} figures/` so copies already in the project are kept.
+- Never reference `{skill-dir}` from the notebook; it uses only the copies in `figures/`.
 
-   ```json
-   {"project": "sparse-moe",
-    "figures": [{"id": "accuracy-curve", "pdf": ".../accuracy-curve.pdf", "png": ".../accuracy-curve.png",
-                 "caption_lead": "...", "caption_body": "..."}]}
-   ```
-4. **Build**:
+| Cell | Content |
+|---|---|
+| First (code, once) | Setup: `%matplotlib inline`, `%config InlineBackend.print_figure_kwargs = {"bbox_inches": None}` (inline preview at the saved size, not cropped), imports, the §2 setup |
+| Per figure (markdown) | `## {id}` then the §8 caption |
+| Per figure (code) | Everything for that figure: load data, plot, `fit_height`, save `{id}.pdf` + `{id}.png`, `plt.show()` |
 
-   ```bash
-   python /mnt/skills/plugins/paper-figure/scripts/build_gallery.py --manifest <figures.json> \
-     --out /mnt/user-data/outputs/{project-name}-figures.html [--merge <index.html>]
-   ```
-5. **Publish**: `Artifact` with `file_path`, `title` = `{project-name}-figures`, `icon` `"chart"`, `capabilities` `{"downloads": true}`, `url` if existing.
-6. **Reply**: changes, LaTeX line, any `[TODO]`. No `present_files` for the HTML.
+- Each figure cell runs on its own after the setup cell: no variables shared between figure cells.
+- Load data from the project's result files (paths relative to `figures/`) when they exist; write numbers inline only when there is no file.
+- Same `id` replaces its two cells; a new id appends two cells at the end. Edit with `NotebookEdit`; create `figures/figures.ipynb` with `Write` if it does not exist.
+- Run it with the project's Python: `jupyter nbconvert --to notebook --execute --inplace figures/figures.ipynb` (it runs with `figures/` as the working directory). The outputs stay in the notebook and the PDF/PNG land in `figures/`. If jupyter is missing, tell the user and ask before installing it.
+- **Reply**: changes, LaTeX line, any `[TODO]`.

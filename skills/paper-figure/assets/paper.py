@@ -7,7 +7,7 @@ from matplotlib.layout_engine import ConstrainedLayoutEngine
 from matplotlib.ticker import FixedLocator
 
 # Inter ships with the skill because no environment has it installed; paper.mplstyle names it.
-for _font in (Path(__file__).parent.parent / "assets").glob("Inter-*.ttf"):
+for _font in Path(__file__).parent.glob("Inter-*.ttf"):
     font_manager.fontManager.addfont(str(_font))
 
 

@@ -6,7 +6,7 @@ font.size: 9
 axes.labelsize: 9
 xtick.labelsize: 8
 ytick.labelsize: 8
-legend.fontsize: 8
+legend.fontsize: 7
 axes.titlesize: 11
 axes.titleweight: normal
 axes.titlepad: 3
@@ -30,6 +30,7 @@ lines.markeredgecolor: FFFFFF
 lines.markeredgewidth: 0.5
 # also sets the legend frame width (no legend.linewidth rcParam)
 patch.linewidth: 0.5
+hatch.linewidth: 0.5
 
 axes.prop_cycle: cycler('color', ['E69F00', '56B4E9', '009E73', 'F0E442', '0072B2', 'D55E00', 'CC79A7', '999999', '000000'])
 image.cmap: viridis

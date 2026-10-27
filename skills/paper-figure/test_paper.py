@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -7,9 +8,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
+ASSETS = Path(__file__).parent / "assets"
+sys.path.insert(0, str(ASSETS))
 from paper import fit_height
 
-STYLE = Path(__file__).parent.parent / "assets" / "paper.mplstyle"
+STYLE = ASSETS / "paper.mplstyle"
 WIDTH = 3.25
 
 
