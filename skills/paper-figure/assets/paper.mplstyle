@@ -12,7 +12,7 @@ axes.labelsize: 9
 xtick.labelsize: 8
 ytick.labelsize: 8
 legend.fontsize: 7
-axes.titlesize: 11
+axes.titlesize: 10
 axes.titleweight: bold
 axes.titlepad: 3
 axes.labelpad: 2
@@ -36,7 +36,7 @@ lines.markeredgecolor: FFFFFF
 lines.markeredgewidth: 0.5
 # also sets the legend frame width (no legend.linewidth rcParam)
 patch.linewidth: 0.5
-hatch.linewidth: 1.0
+hatch.linewidth: 0.5
 
 # Paul Tol's bright set; tol.* colormaps are registered when paper.py imports tol_colors
 axes.prop_cycle: cycler('color', ['4477AA', 'EE6677', '228833', 'CCBB44', '66CCEE', 'AA3377', 'BBBBBB'])

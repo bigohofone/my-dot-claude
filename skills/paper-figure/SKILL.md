@@ -24,17 +24,17 @@ Apply every rule unless the user says otherwise. Order: size → style → plot 
 
 ### Grid and panel aspect
 
-Choose the grid (rows × cols) and the panel aspect together, by judgment, for what this data needs to show. Use the golden ratio (0.618) unless the content needs another aspect. The aspect (width : height) is per panel, not for the whole figure, and is one of four:
+Choose the grid (rows × cols) and the panel aspect together, by judgment, for what this data needs to show. Use 4:3 (0.75) unless the content needs another aspect. The aspect (width : height) is per panel, not for the whole figure, and is one of four:
 
 | Aspect | `aspect=` | Typical fit |
 |---|---|---|
-| 2.618 : 1 | 0.382 | a single panel at double-column width (curves, bars) |
-| 1 : 0.618 | 0.618 | curves, bars, histograms (default) |
+| 8 : 3 | 0.375 | a single panel at double-column width (curves, bars) |
+| 4 : 3 | 0.75 | curves, bars, histograms (default) |
 | 1 : 1 | 1.0 | heatmap, confusion matrix, embedding |
-| 0.618 : 1 | 1.618 | content that is taller than wide (e.g. many horizontal bars) |
+| 3 : 4 | 1.333 | content that is taller than wide (e.g. many horizontal bars) |
 
 - Ask what the reader must see: slopes and gaps between curves need height, many x categories need width, matrices need square cells.
-- Compare a few layouts before choosing. E.g. two line plots in one column: side by side gives ~1.3 in-wide panels that flatten the curves; stacked 2×1 at 0.618 gives each panel the full width and enough height, so it is better.
+- Compare a few layouts before choosing. E.g. two line plots in one column: side by side gives ~1.3 in-wide panels that flatten the curves; stacked 2×1 at 0.75 gives each panel the full width and enough height, so it is better.
 - Spread panels evenly; turn off unused cells.
 - Turn on `sharex` / `sharey` when panels plot the same quantity on that axis (`plt.subplots(..., sharex=True, sharey=True)`); inner tick labels hide automatically, and axis labels go on the outer panels only.
 - After rendering, if curves look flattened or labels crowd, change the grid or aspect and re-render.
@@ -46,7 +46,7 @@ Don't compute it. Create the figure at the target width with any height, draw ev
 ```python
 fig, axes = plt.subplots(1, 2, figsize=(3.25, 2))  # after the §2 setup
 ...  # plot, labels, fig.legend, colorbar
-fit_height(fig, axes, aspect=0.618)
+fit_height(fig, axes, aspect=0.75)
 fig.savefig(...)  # never bbox_inches="tight"
 ```
 
@@ -66,14 +66,16 @@ plt.style.use("paper.mplstyle")
 
 It needs `tol-colors` (Paul Tol's own palette package; Python 3.10+) in the project's Python; if it is missing, tell the user and ask before installing it.
 
-It sets fonts (Inter for all text and math, STIX Sans for math symbols Inter lacks: labels 9, ticks 8, legend 7, titles 11 pt bold), left+bottom spines, 0.5 pt axes and ticks, horizontal #DDDDDD gridlines, lines and markers, the `bright` color cycle and `tol.iridescent` colormap (§4), legend frame defaults, constrained layout, 300 dpi, and fonttype 42 (PDF text stays text with Inter embedded, so it renders the same anywhere).
+It sets fonts (Inter for all text and math, STIX Sans for math symbols Inter lacks: labels 9, ticks 8, legend 7, titles 10 pt bold), left+bottom spines, 0.5 pt axes and ticks, horizontal #DDDDDD gridlines, lines and markers, the `bright` color cycle and `tol.iridescent` colormap (§4), legend frame defaults, constrained layout, 300 dpi, and fonttype 42 (PDF text stays text with Inter embedded, so it renders the same anywhere).
 
 - If text renders in DejaVu Sans, `paper` was not imported before plotting; fix that.
 - No figure title. Panel identifiers (dataset, setting) go in the axes title, never as text inside the axes.
 - Subsampled markers: at x major tick positions (mask by x value, not index step).
 - Don't set axis limits exactly at the first or last data point (e.g. `set_xlim(0, 1)` for x in [0, 1]); markers there get cut in half. Keep the default margin.
 - Reference lines (max/min, regression, threshold): color of related data, `--`, `alpha` 0.5, behind data.
-- Value labels (numbers on bars or points, e.g. `bar_label`): `fontsize=5`; the proposed method's ("Ours") labels bold.
+- Text tick labels (model names, keywords, categories): `fontsize=7`, one step below the 8 pt numeric ticks.
+- Category axes (bar charts, text tick labels): no tick marks, `ax.tick_params(axis="x", length=0)` (or `axis="y"` for horizontal bars); the label under each bar already marks it. With shared axes, apply it to every panel, including those whose labels are hidden.
+- Value labels (numbers on bars or points, e.g. `bar_label`): `fontsize=6`; the proposed method's ("Ours") labels bold.
 
 ## 3. Plot-type overrides
 
@@ -118,16 +120,17 @@ Paul Tol's color-blind-safe schemes, from `tol_colors` (imported as `tc`). Pick 
 - Few levels (e.g. a 5-step heatmap): the `_discrete` version of the map (`tol.sunset_discrete`).
 
 - If series could be confused (grayscale, many series, shades), also vary marker or line style.
+- Emphasis, only when the user names what to emphasize (bars, lines, any chart): that series keeps color (the set's red) and every other series is the same gray (the set's grey, also for bands and markers). If several gray lines must be told apart, vary line style or marker, not shade. Without such a request, use the set colors above.
+- Bar charts: name the bars on the x-axis instead of in a legend; for several groups (benchmarks, datasets), use one panel per group, titled with the group, rather than grouped bars.
 - Never use fill patterns (hatching, dots, `hatch=`) to tell series apart; use color only.
-- Exception, emphasis: in filled marks (bars, histograms, areas), hatch the proposed method ("Ours") and anything the user wants highlighted with `hatch="//////"`, on top of its color. Hatch nothing else. Every hatch pattern is its symbol repeated 6 times (`"//////"`, `"xxxxxx"`, `"......"`), drawn at the style's 1 pt hatch width. The hatch is a darker shade of the bar color, not black: the hatch takes the edge color, so pass `edgecolor=0.6 * np.array(to_rgb(color))` (from `matplotlib.colors`) with `linewidth=0`, which keeps the outline off.
 
 ## 5. Legend
 
 | Case | Rule |
 |---|---|
 | Single panel | inside, explicit `loc` (never `"best"`) |
-| Multiple panels, same series | one shared `fig.legend`, `loc="outside lower center"`, `ncol` = entries; no per-panel legends |
-| Multiple panels, different series per panel | one legend per panel, below its x-axis label: `ax.legend(loc="upper center", bbox_to_anchor=(0.5, 0), borderaxespad=4, frameon=False, fontsize=8)`; never merge them into one legend |
+| Multiple panels, same series | one shared `fig.legend`, `loc="outside upper center"` (above the panels), `ncol` = entries; no per-panel legends |
+| Multiple panels, different series per panel | one legend per panel, above its title: `ax.legend(loc="lower center", bbox_to_anchor=(0.5, 1), borderaxespad=2, frameon=False, fontsize=8)`; never merge them into one legend |
 | Grouped series | rows = groups, columns = variants |
 
 - Inside legends use the style defaults (7 pt). Outside legends add `frameon=False, borderaxespad=0, fontsize=8`.

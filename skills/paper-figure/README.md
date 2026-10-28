@@ -15,9 +15,7 @@ All data figures from [Understanding R1-Zero-Like Training: A Critical Perspecti
 | Fig. | Original | Ours |
 |---|---|---|
 | 2 | <img src="docs/r1zero/fig02-math_performance.png" width="400"> | <img src="docs/r1zero/r1z-math-performance.png" width="400"> |
-| 3 | <img src="docs/r1zero/fig03-model_attributes_qlevel_partial.png" width="400"> | <img src="docs/r1zero/r1z-model-attributes.png" width="400"> |
 | 5 | <img src="docs/r1zero/fig05-exp1_algo_score_and_length_last.png" width="400"> | <img src="docs/r1zero/r1z-dr-grpo-dynamics.png" width="400"> |
-| 6 | <img src="docs/r1zero/fig06-exp3_data_template.png" width="400"> | <img src="docs/r1zero/r1z-template-question-set.png" width="400"> |
 | 7 | <img src="docs/r1zero/fig07-exp4_llama.png" width="268"> | <img src="docs/r1zero/r1z-llama-base-and-algorithms.png" width="300"> |
 | 8 | <img src="docs/r1zero/fig08-ablation.png" width="400"> | <img src="docs/r1zero/r1z-bias-ablation.png" width="400"> |
 | 9 | <img src="docs/r1zero/fig09-multiple_seeds.png" width="264"> | <img src="docs/r1zero/r1z-multiple-seeds.png" width="300"> |

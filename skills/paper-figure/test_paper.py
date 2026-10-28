@@ -34,7 +34,7 @@ def test_single_line():
     ax.plot([0, 1], [0, 1])
     ax.set_xlabel("x")
     ax.set_ylabel("y")
-    check(fig, fit_height(fig, ax), 0.618)
+    check(fig, fit_height(fig, ax), 0.75)
 
 
 def test_two_panels_shared_legend():
@@ -45,7 +45,7 @@ def test_two_panels_shared_legend():
         ax.set_title("T")
     fig.legend(*axes[0].get_legend_handles_labels(), loc="outside lower center", ncol=2,
                frameon=False, borderaxespad=0)
-    check(fig, fit_height(fig, axes), 0.618)
+    check(fig, fit_height(fig, axes), 0.75)
 
 
 def test_grid_with_empty_cell():
@@ -55,7 +55,7 @@ def test_grid_with_empty_cell():
     axes[1, 1].axis("off")
     ratios = fit_height(fig, axes)
     assert len(ratios) == 3
-    check(fig, ratios, 0.618)
+    check(fig, ratios, 0.75)
 
 
 def test_heatmap_colorbar():
@@ -83,11 +83,11 @@ def test_long_labels_converge():
     ax.plot([0, 1], [0, 1_000_000])
     ax.set_yticks([0, 500_000, 1_000_000], ["0", "500,000", "1,000,000"], fontsize=12)
     ax.set_ylabel("A very long y-axis label\nthat spans two lines")
-    check(fig, fit_height(fig, ax), 0.618)
+    check(fig, fit_height(fig, ax), 0.75)
 
 
 def test_aspect_options():
-    for aspect in (1.0, 1.618):
+    for aspect in (1.0, 1.333):
         fig, ax = plt.subplots(figsize=(WIDTH, 3))
         ax.plot([0, 1], [0, 1])
         check(fig, fit_height(fig, ax, aspect=aspect), aspect)
@@ -100,7 +100,7 @@ def test_ticks_that_change_with_height_converge():
     ax.set_ylim(78, 95)
     ratios = fit_height(fig, ax)
     assert fig.get_figwidth() == 3.0
-    assert abs(ratios[0] - 0.618) / 0.618 < 0.005
+    assert abs(ratios[0] - 0.75) / 0.75 < 0.005
     assert ax.get_ylim() == (78, 95)
 
 
@@ -108,7 +108,7 @@ def test_shared_axes():
     fig, axes = plt.subplots(2, 2, figsize=(WIDTH, 3), sharex=True, sharey=True)
     for i, ax in enumerate(axes.flat):
         ax.plot([0, 1], [0, i + 1])
-    check(fig, fit_height(fig, axes), 0.618)
+    check(fig, fit_height(fig, axes), 0.75)
 
 
 def test_pdf_embeds_inter_as_text(tmp_path):

@@ -41,7 +41,7 @@ def _freeze_ticks(panels):
             axis.set_major_locator(FixedLocator([t for t in axis.get_majorticklocs() if lo <= t <= hi]))
 
 
-def fit_height(fig, ax, aspect=0.618, iters=10, tol=0.005):
+def fit_height(fig, ax, aspect=0.75, iters=10, tol=0.005):
     """Change only the figure height so each panel's height / width equals `aspect`.
 
     The panel is the data area inside the axes spines; tick labels, axis labels, titles,
