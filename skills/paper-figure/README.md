@@ -1,13 +1,5 @@
 # paper-figure
 
-| | Before | After |
-|---|---|---|
-| Line | <img src="docs/line-before.png" width="325"> | <img src="docs/line-after.png" width="325"> |
-| Bar | <img src="docs/bars-before.png" width="325"> | <img src="docs/bars-after.png" width="325"> |
-| Scatter | <img src="docs/scatter-before.png" width="325"> | <img src="docs/scatter-after.png" width="325"> |
-| Heatmap | <img src="docs/heat-before.png" width="325"> | <img src="docs/heat-after.png" width="325"> |
-| Multi-panel | <img src="docs/scaling-before.png" width="400"> | <img src="docs/scaling-after.png" width="400"> |
-
 ## Redrawing a paper's figures
 
 All data figures from [Understanding R1-Zero-Like Training: A Critical Perspective](https://arxiv.org/abs/2503.20783) (Liu et al., 2025; CC BY 4.0), left, redrawn with this skill, right. Values are read off the original figures, except Fig. 2, whose numbers are printed on the bars. Both sides are scaled by printed width: the full text width (original) and double column (ours) are 400 px.
